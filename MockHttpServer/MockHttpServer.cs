@@ -57,17 +57,20 @@ namespace MockHttpServer
                                          "No handler provided for URL: " + context.Request.RawUrl;
                     context.Request.ClearContent();
 
-                    //determine the response and send it
-                    try
+                    //send the response, if there is not (if responseString is null, then the handler method should have manually set the output stream)
+                    if (responseString != null)
                     {
-                        var buffer = Encoding.UTF8.GetBytes(responseString);
-                        context.Response.ContentLength64 = buffer.Length;
-                        context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-                    }
-                    catch (Exception)
-                    {
-                        context.Response.OutputStream.Close();
-                        throw;
+                        try
+                        {
+                            var buffer = Encoding.UTF8.GetBytes(responseString);
+                            context.Response.ContentLength64 = buffer.Length;
+                            context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
+                        catch (Exception)
+                        {
+                            context.Response.OutputStream.Close();
+                            throw;
+                        }
                     }
                 }
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RestSharp;
 
@@ -29,15 +30,38 @@ namespace MockHttpServer.UnitTests
             }
         }
 
+        /// <summary>
+        /// Setting the output manually, and returning null, allows you to return non-string data, such as an image file
+        /// </summary>
+        [TestMethod]
+        public void TestManuallySetOutput()
+        {
+            var client = CreateRestClient();
+
+            string expectedResult = "Result";
+            using (new MockHttpServer(TestPort, "/api", (req, rsp, parms) =>
+            {
+                var buffer = Encoding.UTF8.GetBytes(expectedResult);
+                rsp.ContentLength64 = buffer.Length;
+                rsp.OutputStream.Write(buffer, 0, buffer.Length);
+                rsp.OutputStream.Close();
+                return null;
+            }))
+            {
+                var result = client.Execute(new RestRequest("/api", Method.POST));
+                Assert.AreEqual(expectedResult, result.Content);
+            }
+        }
+
         [TestMethod]
         public void TestMultipleUrlHandlers()
         {
             var client = CreateRestClient();
             var requestHandlers = new List<MockHttpHandler>()
             {
-                new MockHttpHandler("/", (req, rsp, parms) =>  "Generic"),
-                new MockHttpHandler("/json/", (req, rsp, parms) =>  @"{""Value"": 64}"),
-                new MockHttpHandler("/xml/", (req, rsp, parms) =>  "<Value>64</Value>")
+                new MockHttpHandler("/", (req, rsp, parms) => "Generic"),
+                new MockHttpHandler("/json/", (req, rsp, parms) => @"{""Value"": 64}"),
+                new MockHttpHandler("/xml/", (req, rsp, parms) => "<Value>64</Value>")
             };
 
             using (var mockServer = new MockHttpServer(TestPort, requestHandlers))
@@ -55,7 +79,7 @@ namespace MockHttpServer.UnitTests
                 Assert.AreEqual("No handler provided for URL: /somepath", result.Content);
             }
         }
-
+        
         [TestMethod]
         public void TestRootUrlHandler()
         {
@@ -118,6 +142,7 @@ namespace MockHttpServer.UnitTests
 
         //tests to add
         //query string usage
+        //return a null, and manually set the output
         //throw an excpetion in the handler
     }
 }
