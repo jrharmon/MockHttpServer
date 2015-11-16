@@ -53,8 +53,8 @@ namespace MockHttpServer
                         parameters[qsParamName] = context.Request.QueryString[qsParamName];
 
                     //get the response string
-                    var responseString = handler?.HandlerFunction(context.Request, context.Response, parameters) ??
-                                         "No handler provided for URL: " + context.Request.RawUrl;
+                    var responseString = handler != null ? handler.HandlerFunction(context.Request, context.Response, parameters)
+                                         : "No handler provided for URL: " + context.Request.RawUrl;
                     context.Request.ClearContent();
 
                     //send the response, if there is not (if responseString is null, then the handler method should have manually set the output stream)

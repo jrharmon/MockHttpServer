@@ -11,7 +11,7 @@ namespace MockHttpServer
     public class MockHttpHandler
     {
         private Regex _comparisonRegex;
-        private List<string> _urlParameterNames = new List<string>(); //stores the names of any parameters in the url (ex. 'books/{category}/{id}') 
+        private List<string> _urlParameterNames = new List<string>(); //stores the names of any parameters in the url (ex. 'books/{category}/{id}')
 
         public MockHttpHandler(string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction)
         {
