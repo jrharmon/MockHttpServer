@@ -48,7 +48,7 @@ namespace MockHttpServer
 
                     //determine the hanlder
                     Dictionary<string, string> parameters = null;
-                    var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, out parameters));
+                    var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
                     foreach (var qsParamName in context.Request.QueryString.AllKeys)
                         parameters[qsParamName] = context.Request.QueryString[qsParamName];
 

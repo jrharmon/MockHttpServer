@@ -122,6 +122,29 @@ namespace MockHttpServer.UnitTests
         }
 
         [TestMethod]
+        public void TestSpecifiedMethods()
+        {
+            var client = CreateRestClient();
+            var requestHandlers = new List<MockHttpHandler>()
+            {
+                new MockHttpHandler("/data", "GET", (req, rsp, parms) => "Get"),
+                new MockHttpHandler("/data", "POST", (req, rsp, parms) => "Post")
+            };
+
+            using (var mockServer = new MockHttpServer(TestPort, requestHandlers))
+            {
+                var result = client.Execute(new RestRequest("data", Method.GET));
+                Assert.AreEqual("Get", result.Content);
+
+                result = client.Execute(new RestRequest("data", Method.POST));
+                Assert.AreEqual(@"Post", result.Content);
+
+                result = client.Execute(new RestRequest("data", Method.DELETE));
+                Assert.AreEqual("No handler provided for URL: /data", result.Content);
+            }
+        }
+
+        [TestMethod]
         public void TestUrlParameters()
         {
             var client = CreateRestClient();
