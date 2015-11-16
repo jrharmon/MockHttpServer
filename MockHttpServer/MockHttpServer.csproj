@@ -41,8 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MockHttpHandler.cs" />
-    <Compile Include="MockHttpServer.cs" />
-    <Compile Include="MockHttpServerHelperExtensions.cs" />
+    <Compile Include="MockServer.cs" />
+    <Compile Include="MockServerHelperExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

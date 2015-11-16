@@ -8,7 +8,7 @@ using RestSharp;
 namespace MockHttpServer.UnitTests
 {
     [TestClass]
-    public class MockHttpServerTests
+    public class MockServerTests
     {
         private const int TestPort = 3333;
 
@@ -23,7 +23,7 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
 
             string expectedResult = "Result";
-            using (new MockHttpServer(TestPort, "/api", (req, rsp, parms) => req.Content()))
+            using (new MockServer(TestPort, "/api", (req, rsp, parms) => req.Content()))
             {
                 var result = client.Execute(new RestRequest("/api", Method.POST).AddParameter("text/json", "123", ParameterType.RequestBody));
                 Assert.AreEqual("123", result.Content);
@@ -39,7 +39,7 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
 
             string expectedResult = "Result";
-            using (new MockHttpServer(TestPort, "/api", (req, rsp, parms) =>
+            using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
             {
                 var buffer = Encoding.UTF8.GetBytes(expectedResult);
                 rsp.ContentLength64 = buffer.Length;
@@ -64,7 +64,7 @@ namespace MockHttpServer.UnitTests
                 new MockHttpHandler("/xml/", (req, rsp, parms) => "<Value>64</Value>")
             };
 
-            using (var mockServer = new MockHttpServer(TestPort, requestHandlers))
+            using (var mockServer = new MockServer(TestPort, requestHandlers))
             {
                 var result = client.Execute(new RestRequest("", Method.POST));
                 Assert.AreEqual("Generic", result.Content);
@@ -86,7 +86,7 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
 
             string expectedResult = "Result";
-            using (new MockHttpServer(TestPort, "", (req, rsp, parms) => expectedResult))
+            using (new MockServer(TestPort, "", (req, rsp, parms) => expectedResult))
             {
                 var result = client.Execute(new RestRequest("", Method.POST));
                 Assert.AreEqual(expectedResult, result.Content);
@@ -105,7 +105,7 @@ namespace MockHttpServer.UnitTests
         {
             var client = CreateRestClient();
 
-            using (new MockHttpServer(TestPort, "/person/{id}/", (req, rsp, parms) => parms["id"]))
+            using (new MockServer(TestPort, "/person/{id}/", (req, rsp, parms) => parms["id"]))
             {
                 var result = client.Execute(new RestRequest("/person/123/", Method.POST));
                 Assert.AreEqual("123", result.Content);
@@ -131,7 +131,7 @@ namespace MockHttpServer.UnitTests
                 new MockHttpHandler("/data", "POST", (req, rsp, parms) => "Post")
             };
 
-            using (var mockServer = new MockHttpServer(TestPort, requestHandlers))
+            using (var mockServer = new MockServer(TestPort, requestHandlers))
             {
                 var result = client.Execute(new RestRequest("data", Method.GET));
                 Assert.AreEqual("Get", result.Content);
@@ -149,7 +149,7 @@ namespace MockHttpServer.UnitTests
         {
             var client = CreateRestClient();
 
-            using (new MockHttpServer(TestPort, "xml/{category}/{id}", (req, rsp, parms) =>
+            using (new MockServer(TestPort, "xml/{category}/{id}", (req, rsp, parms) =>
             {
                 rsp.Headers.Add("Content-Type", "application/xml; charset=utf-8");
                 return $"<Value>{parms["category"]} - {parms["id"]}</Value>";

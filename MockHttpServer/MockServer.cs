@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace MockHttpServer
 {
-    public class MockHttpServer : IDisposable
+    public class MockServer : IDisposable
     {
         private HttpListener _listener;
         private List<MockHttpHandler> _requestHandlers;
 
-        public MockHttpServer(int port, List<MockHttpHandler> requestHandlers = null)
+        public MockServer(int port, List<MockHttpHandler> requestHandlers = null)
         {
             _requestHandlers = requestHandlers ?? new List<MockHttpHandler>();
 
             HandleRequests(port);
         }
 
-        public MockHttpServer(int port, string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction)
+        public MockServer(int port, string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction)
         {
             _requestHandlers = new List<MockHttpHandler>()
             {
