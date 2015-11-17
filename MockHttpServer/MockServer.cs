@@ -49,12 +49,17 @@ namespace MockHttpServer
                     //determine the hanlder
                     Dictionary<string, string> parameters = null;
                     var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
-                    foreach (var qsParamName in context.Request.QueryString.AllKeys)
-                        parameters[qsParamName] = context.Request.QueryString[qsParamName];
-
+                    
                     //get the response string
-                    var responseString = handler != null ? handler.HandlerFunction(context.Request, context.Response, parameters)
-                                         : "No handler provided for URL: " + context.Request.RawUrl;
+                    string responseString;
+                    if (handler != null)
+                    {
+                        foreach (var qsParamName in context.Request.QueryString.AllKeys)
+                            parameters[qsParamName] = context.Request.QueryString[qsParamName];
+                        responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
+                    }
+                    else
+                        responseString = "No handler provided for URL: " + context.Request.RawUrl;
                     context.Request.ClearContent();
 
                     //send the response, if there is not (if responseString is null, then the handler method should have manually set the output stream)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RestSharp;
@@ -79,7 +80,37 @@ namespace MockHttpServer.UnitTests
                 Assert.AreEqual("No handler provided for URL: /somepath", result.Content);
             }
         }
-        
+
+        [TestMethod]
+        public void TestQueryString()
+        {
+            var client = CreateRestClient();
+
+            using (new MockServer(TestPort, "/person", (req, rsp, parms) => $"{parms["person_id"]}, {parms["age"]}"))
+            {
+                var result = client.Execute(new RestRequest("/person?person_id=123&age=82", Method.POST));
+                Assert.AreEqual("123, 82", result.Content);
+            }
+        }
+
+        [TestMethod]
+        public void TestResponseCode()
+        {
+            var client = CreateRestClient();
+
+            string expectedResult = "Failed";
+            using (new MockServer(TestPort, "", (req, rsp, parms) =>
+            {
+                rsp.StatusCode = (int)HttpStatusCode.InternalServerError;
+                return expectedResult;
+            }))
+            {
+                var result = client.Execute(new RestRequest("", Method.POST));
+                Assert.AreEqual(expectedResult, result.Content);
+                Assert.AreEqual(HttpStatusCode.InternalServerError, result.StatusCode);
+            }
+        }
+
         [TestMethod]
         public void TestRootUrlHandler()
         {
@@ -164,8 +195,6 @@ namespace MockHttpServer.UnitTests
         }
 
         //tests to add
-        //query string usage
-        //return a null, and manually set the output
         //throw an excpetion in the handler
     }
 }

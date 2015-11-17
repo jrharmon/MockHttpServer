@@ -19,16 +19,7 @@ namespace MockHttpServer
             HttpMethod = httpMethod;
             HandlerFunction = handlerFunction;
 
-            //create a regex for matching Url against a raw url that may have parameter definitions in it
-            var comparisonRegexString = url + (url.EndsWith("/") ? "?$" : "/?$"); //make sure all urls end with a forward slash for more consistency when comparing to incoming urls
-            comparisonRegexString = (comparisonRegexString.StartsWith("/") ? "^" : "^/") + comparisonRegexString;
-            var regex = new Regex(@"{(.*?)}");
-            foreach (Match match in regex.Matches(comparisonRegexString))
-            {
-                comparisonRegexString = comparisonRegexString.Replace(match.Value, @"(.*?)");
-                _urlParameterNames.Add(match.Groups[1].Value);
-            }
-            _comparisonRegex = new Regex(comparisonRegexString);
+            _comparisonRegex = CreateComparisonRegex(url);
         }
 
         public MockHttpHandler(string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction)
@@ -38,6 +29,30 @@ namespace MockHttpServer
         public string Url { get; }
         public string HttpMethod { get; }
         public Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> HandlerFunction { get; }
+
+        /// <summary>
+        /// Create a regex for matching Url against a raw url that may have parameter definitions, or a query string in it
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        private Regex CreateComparisonRegex(string url)
+        {
+            //make sure all urls start and end with a forward slash for more consistency when comparing to incoming urls
+            var regexString = url + (url.EndsWith("/") ? "?" : "/?");
+            regexString = (regexString.StartsWith("/") ? "^" : "^/") + regexString;
+
+            //find all parameters in the url, and adjust the regex to capture them in groups
+            var regex = new Regex(@"{(.*?)}");
+            foreach (Match match in regex.Matches(regexString))
+            {
+                regexString = regexString.Replace(match.Value, @"(.*?)");
+                _urlParameterNames.Add(match.Groups[1].Value);
+            }
+
+            regexString += @"([?].*)?$";
+
+            return new Regex(regexString);
+        }
 
         /// <summary>
         /// Returns true if the Url in this handler matches the raw Url passed in
