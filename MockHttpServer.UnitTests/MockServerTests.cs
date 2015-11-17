@@ -22,12 +22,29 @@ namespace MockHttpServer.UnitTests
         public void TestContentExtensionMethod()
         {
             var client = CreateRestClient();
-
             string expectedResult = "Result";
+
             using (new MockServer(TestPort, "/api", (req, rsp, parms) => req.Content()))
             {
                 var result = client.Execute(new RestRequest("/api", Method.POST).AddParameter("text/json", "123", ParameterType.RequestBody));
                 Assert.AreEqual("123", result.Content);
+            }
+        }
+
+        [TestMethod]
+        public void TestExceptionInHandler()
+        {
+            var client = CreateRestClient();
+            var errorMessage = "Something was null!!!";
+
+            using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
+            {
+                throw new NullReferenceException(errorMessage);
+            }))
+            {
+                var result = client.Execute(new RestRequest("/api", Method.POST).AddParameter("text/json", "123", ParameterType.RequestBody));
+                Assert.IsTrue(result.Content.Contains(errorMessage));
+                Assert.AreEqual(HttpStatusCode.InternalServerError, result.StatusCode);
             }
         }
 
@@ -38,8 +55,8 @@ namespace MockHttpServer.UnitTests
         public void TestManuallySetOutput()
         {
             var client = CreateRestClient();
-
             string expectedResult = "Result";
+
             using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
             {
                 var buffer = Encoding.UTF8.GetBytes(expectedResult);
@@ -85,11 +102,23 @@ namespace MockHttpServer.UnitTests
         public void TestQueryString()
         {
             var client = CreateRestClient();
-
-            using (new MockServer(TestPort, "/person", (req, rsp, parms) => $"{parms["person_id"]}, {parms["age"]}"))
+            var requestHandlers = new List<MockHttpHandler>()
+            {
+                new MockHttpHandler("/person?active=true", (req, rsp, parms) => "Active"),
+                new MockHttpHandler("/person?active=false", (req, rsp, parms) => "Not Active"),
+                new MockHttpHandler("/person", (req, rsp, parms) => $"{parms["person_id"]}, {parms["age"]}")
+            };
+            
+            using (new MockServer(TestPort, requestHandlers))
             {
                 var result = client.Execute(new RestRequest("/person?person_id=123&age=82", Method.POST));
                 Assert.AreEqual("123, 82", result.Content);
+
+                result = client.Execute(new RestRequest("/person?active=true", Method.POST));
+                Assert.AreEqual("Active", result.Content);
+
+                result = client.Execute(new RestRequest("/person?active=false", Method.POST));
+                Assert.AreEqual("Not Active", result.Content);
             }
         }
 
@@ -97,8 +126,8 @@ namespace MockHttpServer.UnitTests
         public void TestResponseCode()
         {
             var client = CreateRestClient();
-
             string expectedResult = "Failed";
+
             using (new MockServer(TestPort, "", (req, rsp, parms) =>
             {
                 rsp.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -115,8 +144,8 @@ namespace MockHttpServer.UnitTests
         public void TestRootUrlHandler()
         {
             var client = CreateRestClient();
-
             string expectedResult = "Result";
+
             using (new MockServer(TestPort, "", (req, rsp, parms) => expectedResult))
             {
                 var result = client.Execute(new RestRequest("", Method.POST));
@@ -193,8 +222,5 @@ namespace MockHttpServer.UnitTests
                 Assert.AreEqual("application/xml; charset=utf-8", result.Headers.Single(h => h.Name == "Content-Type").Value);
             }
         }
-
-        //tests to add
-        //throw an excpetion in the handler
     }
 }

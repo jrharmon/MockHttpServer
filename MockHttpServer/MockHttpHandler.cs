@@ -37,8 +37,11 @@ namespace MockHttpServer
         /// <returns></returns>
         private Regex CreateComparisonRegex(string url)
         {
+            //treat any characters as plain text, in case there are any special regex characters in the url (such as ?)
+            var regexString = Regex.Escape(url).Replace(@"\{", "{");
+
             //make sure all urls start and end with a forward slash for more consistency when comparing to incoming urls
-            var regexString = url + (url.EndsWith("/") ? "?" : "/?");
+            regexString = regexString + (regexString.EndsWith("/") ? "?" : "/?");
             regexString = (regexString.StartsWith("/") ? "^" : "^/") + regexString;
 
             //find all parameters in the url, and adjust the regex to capture them in groups
@@ -49,7 +52,8 @@ namespace MockHttpServer
                 _urlParameterNames.Add(match.Groups[1].Value);
             }
 
-            regexString += @"([?].*)?$";
+            //if there is not already a ? in the url, allow an optional query string at the end of the url
+            regexString += (!regexString.Contains(@"\?")) ? @"(\?.*)?$" : "$";
 
             return new Regex(regexString);
         }

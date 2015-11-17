@@ -56,7 +56,16 @@ namespace MockHttpServer
                     {
                         foreach (var qsParamName in context.Request.QueryString.AllKeys)
                             parameters[qsParamName] = context.Request.QueryString[qsParamName];
-                        responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
+
+                        try
+                        {
+                            responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
+                        }
+                        catch (Exception ex)
+                        {
+                            responseString = $"Exception in handler: {ex.Message}";
+                            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                        }
                     }
                     else
                         responseString = "No handler provided for URL: " + context.Request.RawUrl;
