@@ -126,16 +126,24 @@ namespace MockHttpServer.UnitTests
         public void TestResponseCode()
         {
             var client = CreateRestClient();
-            string expectedResult = "Failed";
+            var requestHandlers = new List<MockHttpHandler>()
+            {
+                new MockHttpHandler("/succeed", (req, rsp, parms) => "succeed"),
+                new MockHttpHandler("/fail", (req, rsp, parms) => 
+                {
+                    rsp.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    return "fail";
+                })
+            };
 
-            using (new MockServer(TestPort, "", (req, rsp, parms) =>
+            using (new MockServer(TestPort, requestHandlers))
             {
-                rsp.StatusCode = (int)HttpStatusCode.InternalServerError;
-                return expectedResult;
-            }))
-            {
-                var result = client.Execute(new RestRequest("", Method.POST));
-                Assert.AreEqual(expectedResult, result.Content);
+                var result = client.Execute(new RestRequest("/succeed", Method.POST));
+                Assert.AreEqual("succeed", result.Content);
+                Assert.AreEqual(HttpStatusCode.OK, result.StatusCode);
+
+                result = client.Execute(new RestRequest("/fail", Method.POST));
+                Assert.AreEqual("fail", result.Content);
                 Assert.AreEqual(HttpStatusCode.InternalServerError, result.StatusCode);
             }
         }
@@ -191,7 +199,7 @@ namespace MockHttpServer.UnitTests
                 new MockHttpHandler("/data", "POST", (req, rsp, parms) => "Post")
             };
 
-            using (var mockServer = new MockServer(TestPort, requestHandlers))
+            using (new MockServer(TestPort, requestHandlers))
             {
                 var result = client.Execute(new RestRequest("data", Method.GET));
                 Assert.AreEqual("Get", result.Content);

@@ -10,7 +10,7 @@ namespace MockHttpServer
     public class MockServer : IDisposable
     {
         private HttpListener _listener;
-        private List<MockHttpHandler> _requestHandlers;
+        private readonly List<MockHttpHandler> _requestHandlers;
 
         public MockServer(int port, List<MockHttpHandler> requestHandlers = null)
         {
@@ -41,7 +41,7 @@ namespace MockHttpServer
             try
             {
                 //listen for all requests
-                while (true)
+                while (_listener.IsListening)
                 {
                     //get the request
                     var context = await _listener.GetContextAsync();
@@ -108,7 +108,7 @@ namespace MockHttpServer
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && (_listener?.IsListening ?? false))
             {
                 _listener.Stop();
             }

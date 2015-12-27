@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("MockHttpServer")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("A library to help with unit/accpetance tests of code that relies on an external HTTP service, by allowing you to easily mock one.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyCompany("AgileData Software")]
 [assembly: AssemblyProduct("MockHttpServer")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2015")]
+[assembly: AssemblyCopyright("AgileData Software © Microsoft 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
