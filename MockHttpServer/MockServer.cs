@@ -11,20 +11,29 @@ namespace MockHttpServer
     {
         private HttpListener _listener;
         private readonly List<MockHttpHandler> _requestHandlers;
+        private readonly char _wildcardChar;
 
-        public MockServer(int port, List<MockHttpHandler> requestHandlers = null)
+        public MockServer(int port, List<MockHttpHandler> requestHandlers, char wildcardChar = '*')
         {
-            _requestHandlers = requestHandlers ?? new List<MockHttpHandler>();
+            if ((wildcardChar != '*') && (wildcardChar != '+'))
+                throw new ArgumentOutOfRangeException(nameof(wildcardChar), "The value must be either '*' or '+'.");
+
+            _requestHandlers = requestHandlers;
+            _wildcardChar = wildcardChar;
 
             HandleRequests(port);
         }
 
-        public MockServer(int port, string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction)
+        public MockServer(int port, string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction, char wildcardChar = '*')
         {
+            if ((wildcardChar != '*') && (wildcardChar != '+'))
+                throw new ArgumentOutOfRangeException(nameof(wildcardChar), "The value must be either '*' or '+'.");
+
             _requestHandlers = new List<MockHttpHandler>()
             {
                 new MockHttpHandler(url, handlerFunction)
             };
+            _wildcardChar = wildcardChar;
 
             HandleRequests(port);
         }
@@ -35,7 +44,7 @@ namespace MockHttpServer
         {
             //create and start listener
             _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://*:{port}/");
+            _listener.Prefixes.Add($"http://{_wildcardChar}:{port}/");
             _listener.Start();
 
             try
