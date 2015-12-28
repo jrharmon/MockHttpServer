@@ -1,4 +1,8 @@
 # MockHttpServer
+
+[![Build status](https://ci.appveyor.com/api/projects/status/numsjbmqdxpercff?svg=true)](https://ci.appveyor.com/project/jrharmon/mockhttpserver)
+[![NuGet Version](http://img.shields.io/nuget/v/MockHttpServer.svg?style=flat)](https://www.nuget.org/packages/MockHttpServer/) [![NuGet Downloads](http://img.shields.io/nuget/dt/MockHttpServer.svg?style=flat)](https://www.nuget.org/packages/MockHttpServer/)
+
 A library to help with unit/acceptance tests of code that relies on an external HTTP service, by allowing you to
 easily mock one.
 
@@ -86,14 +90,14 @@ Notice that the lambda for the handlers takes in both the request (HttpListenerR
 objects, which allows you full access to additional input information, and the ability to set adiditional output information.
 
 You can read/write headers, cookies, etc, or set the status code of the response.  There is also an extension method
-to make it easier to grab the body text of the request. 
+to make it easier to grab the body text of the request.
 
 ``` C#
 var client = new RestClient("http://localhost:3333/");
 var requestHandlers = new List<MockHttpHandler>()
 {
     new MockHttpHandler("/echo", (req, rsp, parms) => req.Content()),
-    new MockHttpHandler("/fail", (req, rsp, parms) => 
+    new MockHttpHandler("/fail", (req, rsp, parms) =>
     {
         rsp.StatusCode = (int)HttpStatusCode.InternalServerError;
         return "fail";
@@ -110,7 +114,7 @@ using (new MockServer(TestPort, requestHandlers))
 You can return more than just strings as well.  The following example manually sets the output to a stream.  It is
 still just returning plain text, but the stream could be any array of bytes, such as an image or file.
 
-Notice that it returns null, which tells MockServer to not set the output itself, as it is being taken care of. 
+Notice that it returns null, which tells MockServer to not set the output itself, as it is being taken care of.
 
 ``` C#
 var client = new RestClient("http://localhost:3333/");

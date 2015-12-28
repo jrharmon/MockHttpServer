@@ -22,7 +22,6 @@ namespace MockHttpServer.UnitTests
         public void TestContentExtensionMethod()
         {
             var client = CreateRestClient();
-            string expectedResult = "Result";
 
             using (new MockServer(TestPort, "/api", (req, rsp, parms) => req.Content()))
             {
