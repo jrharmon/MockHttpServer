@@ -55,45 +55,44 @@ namespace MockHttpServer
                     //get the request
                     var context = await _listener.GetContextAsync();
 
-                    //determine the hanlder
-                    Dictionary<string, string> parameters = null;
-                    var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
+                    try
+                    {
+                        //determine the hanlder
+                        Dictionary<string, string> parameters = null;
+                        var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
                     
-                    //get the response string
-                    string responseString;
-                    if (handler != null)
-                    {
-                        foreach (var qsParamName in context.Request.QueryString.AllKeys)
-                            parameters[qsParamName] = context.Request.QueryString[qsParamName];
-
-                        try
+                        //get the response string
+                        string responseString;
+                        if (handler != null)
                         {
-                            responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
-                        }
-                        catch (Exception ex)
-                        {
-                            responseString = $"Exception in handler: {ex.Message}";
-                            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        }
-                    }
-                    else
-                        responseString = "No handler provided for URL: " + context.Request.RawUrl;
-                    context.Request.ClearContent();
+                            foreach (var qsParamName in context.Request.QueryString.AllKeys)
+                                parameters[qsParamName] = context.Request.QueryString[qsParamName];
 
-                    //send the response, if there is not (if responseString is null, then the handler method should have manually set the output stream)
-                    if (responseString != null)
-                    {
-                        try
+                            try
+                            {
+                                responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
+                            }
+                            catch (Exception ex)
+                            {
+                                responseString = $"Exception in handler: {ex.Message}";
+                                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                            }
+                        }
+                        else
+                            responseString = "No handler provided for URL: " + context.Request.RawUrl;
+                        context.Request.ClearContent();
+
+                        //send the response, if there is not (if responseString is null, then the handler method should have manually set the output stream)
+                        if (responseString != null)
                         {
                             var buffer = Encoding.UTF8.GetBytes(responseString);
                             context.Response.ContentLength64 = buffer.Length;
                             context.Response.OutputStream.Write(buffer, 0, buffer.Length);
                         }
-                        catch (Exception)
-                        {
-                            context.Response.OutputStream.Close();
-                            throw;
-                        }
+                    }
+                    finally
+                    {
+                        context.Response.OutputStream.Close();
                     }
                 }
             }
