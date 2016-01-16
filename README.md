@@ -112,9 +112,9 @@ using (new MockServer(TestPort, requestHandlers))
 ```
 
 You can return more than just strings as well.  The following example manually sets the output to a stream.  It is
-still just returning plain text, but the stream could be any array of bytes, such as an image or file.
+still just returning plain text, but the stream could have been any array of bytes, such as an image or file.
 
-Notice that it returns null, which tells MockServer to not set the output itself, as it is being taken care of.
+Notice that it has no return value, which tells MockServer to not set the output itself, as it is being taken care of.
 
 ``` C#
 var client = new RestClient("http://localhost:3333/");
@@ -123,8 +123,6 @@ using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
     var buffer = Encoding.UTF8.GetBytes("Result Text");
     rsp.ContentLength64 = buffer.Length;
     rsp.OutputStream.Write(buffer, 0, buffer.Length);
-    rsp.OutputStream.Close();
-    return null;
 }))
 {
     var result = client.Execute(new RestRequest("/api", Method.GET));

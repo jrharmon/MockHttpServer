@@ -61,8 +61,6 @@ namespace MockHttpServer.UnitTests
                 var buffer = Encoding.UTF8.GetBytes(expectedResult);
                 rsp.ContentLength64 = buffer.Length;
                 rsp.OutputStream.Write(buffer, 0, buffer.Length);
-                rsp.OutputStream.Close();
-                return null;
             }))
             {
                 var result = client.Execute(new RestRequest("/api", Method.POST));

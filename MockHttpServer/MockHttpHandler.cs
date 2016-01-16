@@ -26,8 +26,22 @@ namespace MockHttpServer
             : this(url, null, handlerFunction)
         { }
 
+        public MockHttpHandler(string url, string httpMethod, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> handlerAction)
+        {
+            Url = url;
+            HttpMethod = httpMethod;
+            HandlerAction = handlerAction;
+
+            _comparisonRegex = CreateComparisonRegex(url);
+        }
+
+        public MockHttpHandler(string url, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> handlerAction)
+            : this(url, null, handlerAction)
+        { }
+
         public string Url { get; }
         public string HttpMethod { get; }
+        public Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> HandlerAction { get; }
         public Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> HandlerFunction { get; }
 
         /// <summary>

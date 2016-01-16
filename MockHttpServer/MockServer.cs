@@ -11,7 +11,7 @@ namespace MockHttpServer
     {
         private HttpListener _listener;
         private readonly List<MockHttpHandler> _requestHandlers;
-        private readonly char _wildcardChar;
+        private readonly char _wildcardChar; //the wildcard to use for the localhost ip address.  * (the default) and + work the same, but if a port is registered by netsh with a +, you can specify it in the constructor
 
         public MockServer(int port, List<MockHttpHandler> requestHandlers, char wildcardChar = '*')
         {
@@ -32,6 +32,20 @@ namespace MockHttpServer
             _requestHandlers = new List<MockHttpHandler>()
             {
                 new MockHttpHandler(url, handlerFunction)
+            };
+            _wildcardChar = wildcardChar;
+
+            HandleRequests(port);
+        }
+
+        public MockServer(int port, string url, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> handlerAction, char wildcardChar = '*')
+        {
+            if ((wildcardChar != '*') && (wildcardChar != '+'))
+                throw new ArgumentOutOfRangeException(nameof(wildcardChar), "The value must be either '*' or '+'.");
+
+            _requestHandlers = new List<MockHttpHandler>()
+            {
+                new MockHttpHandler(url, handlerAction)
             };
             _wildcardChar = wildcardChar;
 
@@ -62,7 +76,7 @@ namespace MockHttpServer
                         var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
                     
                         //get the response string
-                        string responseString;
+                        string responseString = null;
                         if (handler != null)
                         {
                             foreach (var qsParamName in context.Request.QueryString.AllKeys)
@@ -70,7 +84,10 @@ namespace MockHttpServer
 
                             try
                             {
-                                responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
+                                if (handler.HandlerFunction != null)
+                                    responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
+                                else
+                                    handler.HandlerAction(context.Request, context.Response, parameters);
                             }
                             catch (Exception ex)
                             {
