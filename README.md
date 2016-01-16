@@ -136,7 +136,7 @@ make it easier to work with them.  Many of the response methods simply set prope
 enable a fluid syntax by chaining multiple methods together.
 
 ``` C#
-rsp.Content("Resource not found").ContentType("application/text").StatusCode(404);
+rsp.ContentType("text/plain").StatusCode(404).Content("Resource not found");
 ```
 
 Below is a list of all extension methods.  Note that Content() returns void, so you can't chain after it.  This is because
@@ -154,6 +154,46 @@ HttpListenerResponse ContentType(this HttpListenerResponse response, string cont
 HttpListenerResponse Cookie(this HttpListenerResponse response, string name, string value, string path = null, string domain = null)
 HttpListenerResponse Header(this HttpListenerResponse response, string name, string value)
 HttpListenerResponse StatusCode(this HttpListenerResponse response, int statusCode)
+```
+
+####Custom Extension Methods
+
+While the built-in extension methods cover the basics, it is very easy to write your own for any actions your perform
+often.  Perhaps you often return a 404 with a custom message (as was done above), you could create an extension of the
+response object that sets the content type, status code and content.
+
+``` C#
+public static void NotFound(this HttpListenerResponse response, string message)
+{
+    response.ContentType("text/plain").StatusCode(404).Content(message);
+}
+```
+
+There are also two extension methods you should always create when working with Json data, for serializing and deserializing
+the data.  These would have been built-in with the others, except they require a dependency on a library to handle the
+serialization/deserialization.  Since most people will already be using one, picking one could cause an un-needed
+depency on those that use a different one.
+
+Below is a class that creates both methods, and has the code for using RestSharp or Json.Net.  They both work the same,
+although Json.Net has some extra features that some people might need (and can properly handle serializing a dynamic
+object).
+
+``` C#
+public static class MockServerExtensions
+{
+    public static T JsonToObject<T>(this HttpListenerRequest request)
+    {
+        return SimpleJson.DeserializeObject<T>(request.Content());    //RestSharp
+        //return JsonConvert.DeserializeObject<T>(request.Content()); //Json.Net
+    }
+
+    public static void JsonContent(this HttpListenerResponse response, object contentObject)
+    {
+        var jsonText = SimpleJson.SerializeObject(contentObject);  //RestSharp (doesn't work for dynamic)
+        //var jsonText JsonConvert.SerializeObject(contentObject); //Json.Net
+        response.ContentType("application/json").Content(jsonText);
+    }
+}
 ```
 
 ###Parameters

@@ -79,6 +79,30 @@ namespace MockHttpServer.UnitTests
             }
         }
 
+        [TestMethod]
+        [Description("These conversion methods are not in the main project, but are given as an example in reamde.md")]
+        public void TestJsonConversion()
+        {
+            var client = CreateRestClient();
+            string expectedResult = "Result";
+            var person = new Person() {FirstName = "John", LastName = "Smith", Age = 21};
+
+            using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
+            {
+                var personObject = req.JsonToObject<Person>();
+                personObject.FirstName = "Changed";
+                personObject.Age = 18;
+                rsp.JsonContent(personObject);
+            }))
+            {
+                var request = new RestRequest("/api", Method.POST);
+                request.AddJsonBody(person);
+                var result = client.Execute<Person>(request);
+                Assert.AreEqual("Changed", result.Data.FirstName);
+                Assert.AreEqual(18, result.Data.Age);
+            }
+        }
+
         /// <summary>
         /// Setting the output manually, and returning null, allows you to return non-string data, such as an image file
         /// </summary>
@@ -267,5 +291,28 @@ namespace MockHttpServer.UnitTests
                 Assert.AreEqual("application/xml; charset=utf-8", result.Headers.Single(h => h.Name == "Content-Type").Value);
             }
         }
+    }
+
+    public static class MockServerExtensions
+    {
+        public static T JsonToObject<T>(this HttpListenerRequest request)
+        {
+            return SimpleJson.DeserializeObject<T>(request.Content());
+            //return JsonConvert.DeserializeObject<T>(request.Content());
+        }
+
+        public static void JsonContent(this HttpListenerResponse response, object contentObject)
+        {
+            var jsonText = SimpleJson.SerializeObject(contentObject); //doesn't work for dynamic
+            //var jsonText JsonConvert.SerializeObject(contentObject); //handles dynamic
+            response.ContentType("application/json").Content(jsonText);
+        }
+    }
+
+    internal class Person
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public int Age { get; set; }
     }
 }
