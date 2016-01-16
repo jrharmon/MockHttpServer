@@ -11,8 +11,8 @@ It can easily be installed through NuGet, using the [MockHttpServer](http://nuge
 ##Usage
 
 In its simplest form, when creating an instance of MockServer, you just need to specify the port to
-listen on, a url to listen
-for (just the part after the port), and a lambda that returns a string.
+listen on, a url to listen for (just the part after the port), and a lambda that returns a string
+or void.
 
 MockServer implements IDisposable, so always be sure to dispose of it when done, or wrap it in a using
 statement.  Otherwise, it will continue waiting for a request, and will cause any new instances to fail,
@@ -20,13 +20,39 @@ due to a conflict.
 
 ``` C#
 var client = new RestClient("http://localhost:3333/");
-using (new MockServer(TestPort, "", (req, rsp, parms) => "Result Body"))
+using (new MockServer(TestPort, "", (req, rsp, prm) => "Result Body"))
 {
     var result = client.Execute(new RestRequest("", Method.GET));
 }
 ```
 
 By default, it will accept any HTTP verb at the specified url, and can only handle that one type of request.
+
+###Multiple Handlers
+
+The second type of constructor takes in a list of MockHttpListener objects, allowing more control over the configuration,
+as well as the ability to specify any number of requests to handle.
+
+The following example shows two different HTTP verbs being configured for the same url.  Once you specify an explicit
+verb for a URL, only that verb will be accepted, so in this case, if you tried calling that URL with a DELETE verb,
+you would get the message: "No handler provided for URL: /data".  You can also use a comma-separated list of methods
+if you want to handle multiple, but not all.
+
+``` C#
+var client = new RestClient("http://localhost:3333/");
+var requestHandlers = new List<MockHttpHandler>()
+{
+    new MockHttpHandler("/data", "GET", (req, rsp, prm) => "Get"),
+    new MockHttpHandler("/data", "POST", (req, rsp, prm) => "Post")
+};
+
+using (new MockServer(TestPort, requestHandlers))
+{
+    var result = client.Execute(new RestRequest("data", Method.GET));
+    result = client.Execute(new RestRequest("data", Method.POST));
+    result = client.Execute(new RestRequest("data", Method.DELETE)); //does not work
+}
+```
 
 ###Admin Requirements
 
@@ -56,32 +82,7 @@ the MockServer must match that url EXACTLY.  By default, it uses an '*', so if y
 constructor.
 
 ``` C#
-using (new MockServer(TestPort, "", (req, rsp, parms) => "Result Body", '+'))
-```
-
-###Multiple Handlers
-
-The second type of constructor takes in a list of MockHttpListener objects, allowing more control over the configuration,
-as well as the ability to specify any number of requests to handle.
-
-The following example shows two different HTTP verbs being configured for the same url.  Once you specify an explicit
-verb for a URL, only that verb will be accepted, so in this case, if you tried calling that URL with a DELETE verb,
-you would get the message: "No handler provided for URL: /data"
-
-``` C#
-var client = new RestClient("http://localhost:3333/");
-var requestHandlers = new List<MockHttpHandler>()
-{
-    new MockHttpHandler("/data", "GET", (req, rsp, parms) => "Get"),
-    new MockHttpHandler("/data", "POST", (req, rsp, parms) => "Post")
-};
-
-using (new MockServer(TestPort, requestHandlers))
-{
-    var result = client.Execute(new RestRequest("data", Method.GET));
-    result = client.Execute(new RestRequest("data", Method.POST));
-    result = client.Execute(new RestRequest("data", Method.DELETE)); //does not work
-}
+using (new MockServer(TestPort, "", (req, rsp, prm) => "Result Body", '+'))
 ```
 
 ###Detailed Input/Output
@@ -96,8 +97,8 @@ to make it easier to grab the body text of the request.
 var client = new RestClient("http://localhost:3333/");
 var requestHandlers = new List<MockHttpHandler>()
 {
-    new MockHttpHandler("/echo", (req, rsp, parms) => req.Content()),
-    new MockHttpHandler("/fail", (req, rsp, parms) =>
+    new MockHttpHandler("/echo", (req, rsp, prm) => req.Content()),
+    new MockHttpHandler("/fail", (req, rsp, prm) =>
     {
         rsp.StatusCode = (int)HttpStatusCode.InternalServerError;
         return "fail";
@@ -119,7 +120,7 @@ Notice that it has no return value, which tells MockServer to not set the output
 
 ``` C#
 var client = new RestClient("http://localhost:3333/");
-using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
+using (new MockServer(TestPort, "/api", (req, rsp, prm) =>
 {
     var buffer = Encoding.UTF8.GetBytes("Result Text");
     rsp.Content(buffer);
@@ -209,9 +210,9 @@ Helow is an example of using query string parameters.
 var client = new RestClient("http://localhost:3333/");
 var requestHandlers = new List<MockHttpHandler>()
 {
-    new MockHttpHandler("/person?active=true", (req, rsp, parms) => "Active"),
-    new MockHttpHandler("/person?active=false", (req, rsp, parms) => "Not Active"),
-    new MockHttpHandler("/person", (req, rsp, parms) => $"{parms["person_id"]}, {parms["age"]}")
+    new MockHttpHandler("/person?active=true", (req, rsp, prm) => "Active"),
+    new MockHttpHandler("/person?active=false", (req, rsp, prm) => "Not Active"),
+    new MockHttpHandler("/person", (req, rsp, prm) => $"{prm["person_id"]}, {prm["age"]}")
 };
 
 using (new MockServer(TestPort, requestHandlers))
@@ -226,10 +227,10 @@ And here is an example of accessing parameters from within the URL.
 
 ``` C#
 var client = new RestClient("http://localhost:3333/");
-using (new MockServer(TestPort, "xml/{category}/{id}", (req, rsp, parms) =>
+using (new MockServer(TestPort, "xml/{category}/{id}", (req, rsp, prm) =>
 {
     rsp.Headers.Add("Content-Type", "application/xml; charset=utf-8");
-    return $"<Value>{parms["category"]} - {parms["id"]}</Value>";
+    return $"<Value>{prm["category"]} - {prm["id"]}</Value>";
 }))
 {
     var result = client.Execute(new RestRequest("xml/horror/12345/", Method.POST)); //"<Value>horror - 12345</Value>"

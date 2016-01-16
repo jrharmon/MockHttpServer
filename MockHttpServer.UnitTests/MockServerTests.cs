@@ -26,7 +26,7 @@ namespace MockHttpServer.UnitTests
             var cookieName = "name";
             var cookieValue = "value";
 
-            using (new MockServer(TestPort, "/api", (req, rsp, parms) => rsp.Cookie(cookieName, cookieValue).Content(expectedResult)))
+            using (new MockServer(TestPort, "/api", (req, rsp, prm) => rsp.Cookie(cookieName, cookieValue).Content(expectedResult)))
             {
                 var result = client.Execute(new RestRequest("/api", Method.POST));
                 Assert.AreEqual(expectedResult, result.Content);
@@ -39,7 +39,7 @@ namespace MockHttpServer.UnitTests
         {
             var client = CreateRestClient();
 
-            using (new MockServer(TestPort, "/api", (req, rsp, parms) => req.Content()))
+            using (new MockServer(TestPort, "/api", (req, rsp, prm) => req.Content()))
             {
                 var result = client.Execute(new RestRequest("/api", Method.POST).AddParameter("text/json", "123", ParameterType.RequestBody));
                 Assert.AreEqual("123", result.Content);
@@ -52,7 +52,7 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             var errorMessage = "Something was null!!!";
 
-            using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
+            using (new MockServer(TestPort, "/api", (req, rsp, prm) =>
             {
                 throw new NullReferenceException(errorMessage);
             }))
@@ -71,7 +71,7 @@ namespace MockHttpServer.UnitTests
             var headerName = "name";
             var headerValue = "value";
 
-            using (new MockServer(TestPort, "/api", (req, rsp, parms) => rsp.Header(headerName, headerValue).Content(expectedResult)))
+            using (new MockServer(TestPort, "/api", (req, rsp, prm) => rsp.Header(headerName, headerValue).Content(expectedResult)))
             {
                 var result = client.Execute(new RestRequest("/api", Method.POST));
                 Assert.AreEqual(expectedResult, result.Content);
@@ -87,7 +87,7 @@ namespace MockHttpServer.UnitTests
             string expectedResult = "Result";
             var person = new Person() {FirstName = "John", LastName = "Smith", Age = 21};
 
-            using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
+            using (new MockServer(TestPort, "/api", (req, rsp, prm) =>
             {
                 var personObject = req.JsonToObject<Person>();
                 personObject.FirstName = "Changed";
@@ -112,7 +112,7 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             string expectedResult = "Result";
 
-            using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
+            using (new MockServer(TestPort, "/api", (req, rsp, prm) =>
             {
                 var buffer = Encoding.UTF8.GetBytes(expectedResult);
                 rsp.Content(buffer);
@@ -129,9 +129,9 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             var requestHandlers = new List<MockHttpHandler>()
             {
-                new MockHttpHandler("/", (req, rsp, parms) => "Generic"),
-                new MockHttpHandler("/json/", (req, rsp, parms) => @"{""Value"": 64}"),
-                new MockHttpHandler("/xml/", (req, rsp, parms) => "<Value>64</Value>")
+                new MockHttpHandler("/", (req, rsp, prm) => "Generic"),
+                new MockHttpHandler("/json/", (req, rsp, prm) => @"{""Value"": 64}"),
+                new MockHttpHandler("/xml/", (req, rsp, prm) => "<Value>64</Value>")
             };
 
             using (var mockServer = new MockServer(TestPort, requestHandlers))
@@ -156,9 +156,9 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             var requestHandlers = new List<MockHttpHandler>()
             {
-                new MockHttpHandler("/person?active=true", (req, rsp, parms) => "Active"),
-                new MockHttpHandler("/person?active=false", (req, rsp, parms) => "Not Active"),
-                new MockHttpHandler("/person", (req, rsp, parms) => $"{parms["person_id"]}, {parms["age"]}")
+                new MockHttpHandler("/person?active=true", (req, rsp, prm) => "Active"),
+                new MockHttpHandler("/person?active=false", (req, rsp, prm) => "Not Active"),
+                new MockHttpHandler("/person", (req, rsp, prm) => $"{prm["person_id"]}, {prm["age"]}")
             };
             
             using (new MockServer(TestPort, requestHandlers))
@@ -180,8 +180,8 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             var requestHandlers = new List<MockHttpHandler>()
             {
-                new MockHttpHandler("/succeed", (req, rsp, parms) => "succeed"),
-                new MockHttpHandler("/fail", (req, rsp, parms) => rsp.StatusCode((int)HttpStatusCode.InternalServerError).Content("fail"))
+                new MockHttpHandler("/succeed", (req, rsp, prm) => "succeed"),
+                new MockHttpHandler("/fail", (req, rsp, prm) => rsp.StatusCode((int)HttpStatusCode.InternalServerError).Content("fail"))
             };
 
             using (new MockServer(TestPort, requestHandlers))
@@ -202,7 +202,7 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             string expectedResult = "Result";
 
-            using (new MockServer(TestPort, "", (req, rsp, parms) => expectedResult))
+            using (new MockServer(TestPort, "", (req, rsp, prm) => expectedResult))
             {
                 var result = client.Execute(new RestRequest("", Method.POST));
                 Assert.AreEqual(expectedResult, result.Content);
@@ -221,7 +221,7 @@ namespace MockHttpServer.UnitTests
         {
             var client = CreateRestClient();
 
-            using (new MockServer(TestPort, "/person/{id}/", (req, rsp, parms) => parms["id"]))
+            using (new MockServer(TestPort, "/person/{id}/", (req, rsp, prm) => prm["id"]))
             {
                 var result = client.Execute(new RestRequest("/person/123/", Method.POST));
                 Assert.AreEqual("123", result.Content);
@@ -243,8 +243,8 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             var requestHandlers = new List<MockHttpHandler>()
             {
-                new MockHttpHandler("/data", "GET", (req, rsp, parms) => "Get"),
-                new MockHttpHandler("/data", "POST", (req, rsp, parms) => "Post")
+                new MockHttpHandler("/data", "GET", (req, rsp, prm) => "Get"),
+                new MockHttpHandler("/data", "POST,PUT", (req, rsp, prm) => "Post/Put")
             };
 
             using (new MockServer(TestPort, requestHandlers))
@@ -253,7 +253,10 @@ namespace MockHttpServer.UnitTests
                 Assert.AreEqual("Get", result.Content);
 
                 result = client.Execute(new RestRequest("data", Method.POST));
-                Assert.AreEqual(@"Post", result.Content);
+                Assert.AreEqual(@"Post/Put", result.Content);
+
+                result = client.Execute(new RestRequest("data", Method.PUT));
+                Assert.AreEqual(@"Post/Put", result.Content);
 
                 result = client.Execute(new RestRequest("data", Method.DELETE));
                 Assert.AreEqual("No handler provided for URL: /data", result.Content);
@@ -268,7 +271,7 @@ namespace MockHttpServer.UnitTests
             var client = CreateRestClient();
             string expectedResult = "Result";
 
-            using (new MockServer(TestPort, "", (req, rsp, parms) => expectedResult, '+'))
+            using (new MockServer(TestPort, "", (req, rsp, prm) => expectedResult, '+'))
             {
                 var result = client.Execute(new RestRequest("", Method.POST));
                 Assert.AreEqual(expectedResult, result.Content);
@@ -280,10 +283,10 @@ namespace MockHttpServer.UnitTests
         {
             var client = CreateRestClient();
 
-            using (new MockServer(TestPort, "xml/{category}/{id}", (req, rsp, parms) =>
+            using (new MockServer(TestPort, "xml/{category}/{id}", (req, rsp, prm) =>
             {
                 rsp.Headers.Add("Content-Type", "application/xml; charset=utf-8");
-                return $"<Value>{parms["category"]} - {parms["id"]}</Value>";
+                return $"<Value>{prm["category"]} - {prm["id"]}</Value>";
             }))
             {
                 var result = client.Execute(new RestRequest("xml/horror/12345/", Method.POST));

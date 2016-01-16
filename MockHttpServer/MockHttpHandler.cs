@@ -84,7 +84,7 @@ namespace MockHttpServer
         public bool MatchesUrl(string rawUrl, string httpMethod, out Dictionary<string, string> parameters)
         {
             var match = _comparisonRegex.Match(rawUrl);
-            bool isMethodMatched = HttpMethod == null || HttpMethod == httpMethod;
+            bool isMethodMatched = HttpMethod == null || HttpMethod.Split(',').Contains(httpMethod);
             parameters = null;
             if ((match.Success) && (isMethodMatched))
             {
