@@ -257,6 +257,8 @@ namespace MockHttpServer.UnitTests
 
                 result = client.Execute(new RestRequest("data", Method.DELETE));
                 Assert.AreEqual("No handler provided for URL: /data", result.Content);
+                Assert.AreEqual(404, (int)result.StatusCode);
+                Assert.AreEqual("text/plain", result.ContentType);
             }
         }
 

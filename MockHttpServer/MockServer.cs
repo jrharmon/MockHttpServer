@@ -85,18 +85,22 @@ namespace MockHttpServer
                             try
                             {
                                 if (handler.HandlerFunction != null)
-                                    responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
+                                    responseString = handler.HandlerFunction(context.Request, context.Response,
+                                        parameters);
                                 else
                                     handler.HandlerAction(context.Request, context.Response, parameters);
                             }
                             catch (Exception ex)
                             {
                                 responseString = $"Exception in handler: {ex.Message}";
-                                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                                context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
                             }
                         }
                         else
+                        {
+                            context.Response.ContentType("text/plain").StatusCode(404);
                             responseString = "No handler provided for URL: " + context.Request.RawUrl;
+                        }
                         context.Request.ClearContent();
 
                         //send the response, if there is not (if responseString is null, then the handler method should have manually set the output stream)
