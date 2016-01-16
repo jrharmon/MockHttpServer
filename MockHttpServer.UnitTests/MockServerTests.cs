@@ -19,6 +19,22 @@ namespace MockHttpServer.UnitTests
         }
 
         [TestMethod]
+        public void TestCookies()
+        {
+            var client = CreateRestClient();
+            string expectedResult = "Result";
+            var cookieName = "name";
+            var cookieValue = "value";
+
+            using (new MockServer(TestPort, "/api", (req, rsp, parms) => rsp.Cookie(cookieName, cookieValue).Content(expectedResult)))
+            {
+                var result = client.Execute(new RestRequest("/api", Method.POST));
+                Assert.AreEqual(expectedResult, result.Content);
+                Assert.IsTrue(result.Cookies.Any(c => c.Name == cookieName && c.Value == cookieValue));
+            }
+        }
+
+        [TestMethod]
         public void TestContentExtensionMethod()
         {
             var client = CreateRestClient();
@@ -47,6 +63,22 @@ namespace MockHttpServer.UnitTests
             }
         }
 
+        [TestMethod]
+        public void TestHeaders()
+        {
+            var client = CreateRestClient();
+            string expectedResult = "Result";
+            var headerName = "name";
+            var headerValue = "value";
+
+            using (new MockServer(TestPort, "/api", (req, rsp, parms) => rsp.Header(headerName, headerValue).Content(expectedResult)))
+            {
+                var result = client.Execute(new RestRequest("/api", Method.POST));
+                Assert.AreEqual(expectedResult, result.Content);
+                Assert.IsTrue(result.Headers.Any(h => h.Name == headerName && h.Value.Equals(headerValue)));
+            }
+        }
+
         /// <summary>
         /// Setting the output manually, and returning null, allows you to return non-string data, such as an image file
         /// </summary>
@@ -59,8 +91,7 @@ namespace MockHttpServer.UnitTests
             using (new MockServer(TestPort, "/api", (req, rsp, parms) =>
             {
                 var buffer = Encoding.UTF8.GetBytes(expectedResult);
-                rsp.ContentLength64 = buffer.Length;
-                rsp.OutputStream.Write(buffer, 0, buffer.Length);
+                rsp.Content(buffer);
             }))
             {
                 var result = client.Execute(new RestRequest("/api", Method.POST));
@@ -126,11 +157,7 @@ namespace MockHttpServer.UnitTests
             var requestHandlers = new List<MockHttpHandler>()
             {
                 new MockHttpHandler("/succeed", (req, rsp, parms) => "succeed"),
-                new MockHttpHandler("/fail", (req, rsp, parms) => 
-                {
-                    rsp.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    return "fail";
-                })
+                new MockHttpHandler("/fail", (req, rsp, parms) => rsp.StatusCode((int)HttpStatusCode.InternalServerError).Content("fail"))
             };
 
             using (new MockServer(TestPort, requestHandlers))

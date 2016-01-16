@@ -103,13 +103,14 @@ namespace MockHttpServer
                         if (responseString != null)
                         {
                             var buffer = Encoding.UTF8.GetBytes(responseString);
-                            context.Response.ContentLength64 = buffer.Length;
+                            context.Response.ContentLength64 += buffer.Length;
                             context.Response.OutputStream.Write(buffer, 0, buffer.Length);
                         }
                     }
                     finally
                     {
                         context.Response.OutputStream.Close();
+                        context.Response.Close();
                     }
                 }
             }
