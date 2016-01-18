@@ -82,6 +82,14 @@ namespace MockHttpServer
             return response;
         }
 
+        public static void JsonTextContent(this HttpListenerResponse response, string value)
+        {
+            response.ContentType("application/json");
+            var buffer = Encoding.UTF8.GetBytes(value);
+            response.ContentLength64 += buffer.Length;
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
+
         public static HttpListenerResponse StatusCode(this HttpListenerResponse response, int statusCode)
         {
             response.StatusCode = statusCode;

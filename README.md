@@ -43,7 +43,8 @@ var client = new RestClient("http://localhost:3333/");
 var requestHandlers = new List<MockHttpHandler>()
 {
     new MockHttpHandler("/data", "GET", (req, rsp, prm) => "Get"),
-    new MockHttpHandler("/data", "POST", (req, rsp, prm) => "Post")
+    new MockHttpHandler("/data", "POST", (req, rsp, prm) => "Post").
+    new MockHttpHandler("/data-multi", "GET,POST", (req, rsp, prm) => "Get/Post")
 };
 
 using (new MockServer(TestPort, requestHandlers))
@@ -51,6 +52,20 @@ using (new MockServer(TestPort, requestHandlers))
     var result = client.Execute(new RestRequest("data", Method.GET));
     result = client.Execute(new RestRequest("data", Method.POST));
     result = client.Execute(new RestRequest("data", Method.DELETE)); //does not work
+    result = client.Execute(new RestRequest("data-multi", Method.GET));
+    result = client.Execute(new RestRequest("data-multi", Method.POST));
+}
+```
+
+When specifying a list of handlers, as above, you can also specify a shared pre-handler that will be run before all
+handlers (and even if no handler is found).  It takes in the same request, response and parameter variables as a
+normal handler, but does not return a value.  This is great for adding standard headers to all responses, or checking
+requests for common information, such as authentication.
+
+``` C#
+using (var mockServer = new MockServer(TestPort, requestHandlers, (req, rsp, prm) => rsp.Header("custom", "value")))
+{
+    ...
 }
 ```
 
@@ -154,6 +169,7 @@ void Content(this HttpListenerResponse response, string value)
 HttpListenerResponse ContentType(this HttpListenerResponse response, string contentType)
 HttpListenerResponse Cookie(this HttpListenerResponse response, string name, string value, string path = null, string domain = null)
 HttpListenerResponse Header(this HttpListenerResponse response, string name, string value)
+void JsonTextContent(this HttpListenerResponse response, string value) //same as content, but also sets "Content-Type" to "application/json"
 HttpListenerResponse StatusCode(this HttpListenerResponse response, int statusCode)
 ```
 

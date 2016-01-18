@@ -151,6 +151,34 @@ namespace MockHttpServer.UnitTests
         }
 
         [TestMethod]
+        public void TestPreHandler()
+        {
+            var client = CreateRestClient();
+            var headerName = "custom";
+            var headerValue = "value";
+            var requestHandlers = new List<MockHttpHandler>()
+            {
+                new MockHttpHandler("/method1", (req, rsp, prm) => @"{""Value"": 1}"),
+                new MockHttpHandler("/method2", (req, rsp, prm) => rsp.JsonTextContent(@"{""Value"": 2}"))
+            };
+
+            using (var mockServer = new MockServer(TestPort, requestHandlers, (req, rsp, prm) => rsp.Header(headerName, headerValue)))
+            {
+                var result = client.Execute(new RestRequest("/method1", Method.POST));
+                Assert.AreEqual(@"{""Value"": 1}", result.Content);
+                Assert.IsTrue(result.Headers.Any(h => h.Name == headerName && h.Value.Equals(headerValue)));
+
+                result = client.Execute(new RestRequest("/method2", Method.POST));
+                Assert.AreEqual(@"{""Value"": 2}", result.Content);
+                Assert.IsTrue(result.Headers.Any(h => h.Name == headerName && h.Value.Equals(headerValue)));
+
+                result = client.Execute(new RestRequest("somepath", Method.POST));
+                Assert.AreEqual("No handler provided for URL: /somepath", result.Content);
+                Assert.IsTrue(result.Headers.Any(h => h.Name == headerName && h.Value.Equals(headerValue)));
+            }
+        }
+
+        [TestMethod]
         public void TestQueryString()
         {
             var client = CreateRestClient();

@@ -11,14 +11,22 @@ namespace MockHttpServer
     {
         private HttpListener _listener;
         private readonly List<MockHttpHandler> _requestHandlers;
+        private readonly Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> _preHandler; //if set, this will be executed for every request before the handler is called
         private readonly char _wildcardChar; //the wildcard to use for the localhost ip address.  * (the default) and + work the same, but if a port is registered by netsh with a +, you can specify it in the constructor
 
         public MockServer(int port, List<MockHttpHandler> requestHandlers, char wildcardChar = '*')
+            : this(port, requestHandlers, null, wildcardChar)
+        {
+
+        }
+
+        public MockServer(int port, List<MockHttpHandler> requestHandlers, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> preHandler, char wildcardChar = '*')
         {
             if ((wildcardChar != '*') && (wildcardChar != '+'))
                 throw new ArgumentOutOfRangeException(nameof(wildcardChar), "The value must be either '*' or '+'.");
 
             _requestHandlers = requestHandlers;
+            _preHandler = preHandler;
             _wildcardChar = wildcardChar;
 
             HandleRequests(port);
@@ -74,19 +82,22 @@ namespace MockHttpServer
                         //determine the hanlder
                         Dictionary<string, string> parameters = null;
                         var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
-                    
+
+                        //run the shared pre-handler
+                        _preHandler?.Invoke(context.Request, context.Response, parameters ?? new Dictionary<string, string>());
+
                         //get the response string
                         string responseString = null;
                         if (handler != null)
                         {
+                            //add the query string parameters to the pre-defined url parameters that were set from MatchesUrl()
                             foreach (var qsParamName in context.Request.QueryString.AllKeys)
                                 parameters[qsParamName] = context.Request.QueryString[qsParamName];
 
                             try
                             {
                                 if (handler.HandlerFunction != null)
-                                    responseString = handler.HandlerFunction(context.Request, context.Response,
-                                        parameters);
+                                    responseString = handler.HandlerFunction(context.Request, context.Response, parameters);
                                 else
                                     handler.HandlerAction(context.Request, context.Response, parameters);
                             }
