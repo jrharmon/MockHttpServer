@@ -13,7 +13,7 @@ It can easily be installed through NuGet, using the [MockHttpServer](http://nuge
   1. [Usage](#usage)
   1. [Multiple Handlers](#multiple-handlers)
   1. [Admin Requirements](#admin-requirements)
-  1. [Detailed Input/Output](#detailed-input/output)
+  1. [Detailed Input/Output](#detailed-inputoutput)
   1. [Extension Methods](#extension-methods)
   1. [Custom Extension Methods](#custom-extension-methods)
   1. [Parameters](#parameters)
