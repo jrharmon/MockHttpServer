@@ -28,6 +28,12 @@ using (new MockServer(TestPort, "", (req, rsp, prm) => "Result Body"))
 
 By default, it will accept any HTTP verb at the specified url, and can only handle that one type of request.
 
+If you don't have a specific port you need to listen on, but want to make sure you aren't going to conflict with another
+program listening on a port (perhaps your build server is testing two instances of your application at once), then you
+can set the port to 0 when creating MockServer, and it will pick a random un-used port.  You can then use the Port
+property to see what was used, and make requests against that port.  (Internally, TcpListener is used to find the port,
+which may trigger a firewall warning, and will usually need admin rights to run.)
+
 ###Multiple Handlers
 
 The second type of constructor takes in a list of MockHttpListener objects, allowing more control over the configuration,

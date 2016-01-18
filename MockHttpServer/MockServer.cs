@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,6 +14,20 @@ namespace MockHttpServer
         private readonly List<MockHttpHandler> _requestHandlers;
         private readonly Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> _preHandler; //if set, this will be executed for every request before the handler is called
         private readonly char _wildcardChar; //the wildcard to use for the localhost ip address.  * (the default) and + work the same, but if a port is registered by netsh with a +, you can specify it in the constructor
+
+        public int Port { get; }
+
+        public MockServer(int port, string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction, char wildcardChar = '*')
+            : this(port, new List<MockHttpHandler> { new MockHttpHandler(url, handlerFunction) }, wildcardChar)
+        {
+
+        }
+
+        public MockServer(int port, string url, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> handlerAction, char wildcardChar = '*')
+            : this(port, new List<MockHttpHandler> { new MockHttpHandler(url, handlerAction) }, wildcardChar)
+        {
+
+        }
 
         public MockServer(int port, List<MockHttpHandler> requestHandlers, char wildcardChar = '*')
             : this(port, requestHandlers, null, wildcardChar)
@@ -29,38 +44,21 @@ namespace MockHttpServer
             _preHandler = preHandler;
             _wildcardChar = wildcardChar;
 
-            HandleRequests(port);
-        }
+            Port = port > 0 ? port : GetRandomUnusedPort();
 
-        public MockServer(int port, string url, Func<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>, string> handlerFunction, char wildcardChar = '*')
-        {
-            if ((wildcardChar != '*') && (wildcardChar != '+'))
-                throw new ArgumentOutOfRangeException(nameof(wildcardChar), "The value must be either '*' or '+'.");
-
-            _requestHandlers = new List<MockHttpHandler>()
-            {
-                new MockHttpHandler(url, handlerFunction)
-            };
-            _wildcardChar = wildcardChar;
-
-            HandleRequests(port);
-        }
-
-        public MockServer(int port, string url, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> handlerAction, char wildcardChar = '*')
-        {
-            if ((wildcardChar != '*') && (wildcardChar != '+'))
-                throw new ArgumentOutOfRangeException(nameof(wildcardChar), "The value must be either '*' or '+'.");
-
-            _requestHandlers = new List<MockHttpHandler>()
-            {
-                new MockHttpHandler(url, handlerAction)
-            };
-            _wildcardChar = wildcardChar;
-
-            HandleRequests(port);
+            HandleRequests(Port);
         }
 
         #region Private Methods
+
+        private static int GetRandomUnusedPort()
+        {
+            var listener = new TcpListener(IPAddress.Any, 0);
+            listener.Start();
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+            return port;
+        }
 
         private async Task HandleRequests(int port)
         {

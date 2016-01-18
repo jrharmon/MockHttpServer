@@ -13,9 +13,9 @@ namespace MockHttpServer.UnitTests
     {
         private const int TestPort = 3333;
 
-        private RestClient CreateRestClient()
+        private RestClient CreateRestClient(int? port = null)
         {
-            return new RestClient($"http://localhost:{TestPort}/");
+            return new RestClient($"http://localhost:{port ?? TestPort}/");
         }
 
         [TestMethod]
@@ -134,7 +134,7 @@ namespace MockHttpServer.UnitTests
                 new MockHttpHandler("/xml/", (req, rsp, prm) => "<Value>64</Value>")
             };
 
-            using (var mockServer = new MockServer(TestPort, requestHandlers))
+            using (new MockServer(TestPort, requestHandlers))
             {
                 var result = client.Execute(new RestRequest("", Method.POST));
                 Assert.AreEqual("Generic", result.Content);
@@ -162,7 +162,7 @@ namespace MockHttpServer.UnitTests
                 new MockHttpHandler("/method2", (req, rsp, prm) => rsp.JsonTextContent(@"{""Value"": 2}"))
             };
 
-            using (var mockServer = new MockServer(TestPort, requestHandlers, (req, rsp, prm) => rsp.Header(headerName, headerValue)))
+            using (new MockServer(TestPort, requestHandlers, (req, rsp, prm) => rsp.Header(headerName, headerValue)))
             {
                 var result = client.Execute(new RestRequest("/method1", Method.POST));
                 Assert.AreEqual(@"{""Value"": 1}", result.Content);
@@ -199,6 +199,19 @@ namespace MockHttpServer.UnitTests
 
                 result = client.Execute(new RestRequest("/person?active=false", Method.POST));
                 Assert.AreEqual("Not Active", result.Content);
+            }
+        }
+
+        [TestMethod]
+        public void TestRandomPort()
+        {
+            string expectedResult = "Result";
+
+            using (var mockServer = new MockServer(0, "", (req, rsp, prm) => expectedResult))
+            {
+                var client = CreateRestClient(mockServer.Port);
+                var result = client.Execute(new RestRequest("", Method.POST));
+                Assert.AreEqual(expectedResult, result.Content);
             }
         }
 
