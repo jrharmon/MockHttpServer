@@ -8,6 +8,16 @@ easily mock one.
 
 It can easily be installed through NuGet, using the [MockHttpServer](http://nuget.org/packages/MockHttpServer) package.
 
+## Table of Contents
+
+  1. [Usage](#usage)
+  1. [Multiple Handlers](#multiple-handlers)
+  1. [Admin Requirements](#admin-requirements)
+  1. [Detailed Input/Output](#detailed-input/output)
+  1. [Extension Methods](#extension-methods)
+  1. [Custom Extension Methods](#custom-extension-methods)
+  1. [Parameters](#parameters)
+
 ##Usage
 
 In its simplest form, when creating an instance of MockServer, you just need to specify the port to
