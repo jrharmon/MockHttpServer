@@ -1,7 +1,7 @@
 # MockHttpServer
 
 [![Build status](https://ci.appveyor.com/api/projects/status/numsjbmqdxpercff?svg=true)](https://ci.appveyor.com/project/jrharmon/mockhttpserver)
-[![NuGet Version](http://img.shields.io/nuget/v/MockHttpServer.svg?style=flat)](https://www.nuget.org/packages/MockHttpServer/) [![NuGet Downloads](http://img.shields.io/nuget/dt/MockHttpServer.svg?style=flat)](https://www.nuget.org/packages/MockHttpServer/)
+[![NuGet Version](http://img.shields.io/nuget/v/MockHttpServer.svg?style=flat)](https://www.nuget.org/packages/MockHttpServer/)
 
 A library to help with unit/acceptance tests of code that relies on an external HTTP service, by allowing you to
 easily mock one.
