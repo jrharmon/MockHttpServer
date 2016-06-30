@@ -85,6 +85,14 @@ using (var mockServer = new MockServer(TestPort, requestHandlers, (req, rsp, prm
 }
 ```
 
+If you need to update your handlers after the server is created, you can easily do that as well.
+
+``` C#
+mockServer.ClearRequestHandlers();
+mockServer.AddRequestHandler(myHandler);
+mockServer.SetRequestHandlers(myHandlers);
+```
+
 ###Admin Requirements
 
 Due to security restrictions within Windows, the application must be run as an admin for MockServer to function.  For
