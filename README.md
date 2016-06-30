@@ -29,7 +29,7 @@ statement.  Otherwise, it will continue waiting for a request, and will cause an
 due to a conflict.
 
 ``` C#
-var client = new RestClient("http://localhost:3333/");
+var client = new RestClient($"http://localhost:{TestPort}/");
 using (new MockServer(TestPort, "", (req, rsp, prm) => "Result Body"))
 {
     var result = client.Execute(new RestRequest("", Method.GET));
@@ -55,7 +55,7 @@ you would get the message: "No handler provided for URL: /data".  You can also u
 if you want to handle multiple, but not all.
 
 ``` C#
-var client = new RestClient("http://localhost:3333/");
+var client = new RestClient($"http://localhost:{TestPort}/");
 var requestHandlers = new List<MockHttpHandler>()
 {
     new MockHttpHandler("/data", "GET", (req, rsp, prm) => "Get"),
@@ -125,7 +125,7 @@ You can read/write headers, cookies, etc, or set the status code of the response
 to make it easier to grab the body text of the request.
 
 ``` C#
-var client = new RestClient("http://localhost:3333/");
+var client = new RestClient($"http://localhost:{TestPort}/");
 var requestHandlers = new List<MockHttpHandler>()
 {
     new MockHttpHandler("/echo", (req, rsp, prm) => req.Content()),
@@ -150,7 +150,7 @@ image or file.
 Notice that it has no return value, which tells MockServer to not set the output itself, as it is being taken care of.
 
 ``` C#
-var client = new RestClient("http://localhost:3333/");
+var client = new RestClient($"http://localhost:{TestPort}/");
 using (new MockServer(TestPort, "/api", (req, rsp, prm) =>
 {
     var buffer = Encoding.UTF8.GetBytes("Result Text");
@@ -239,7 +239,7 @@ the label used.
 Helow is an example of using query string parameters.
 
 ``` C#
-var client = new RestClient("http://localhost:3333/");
+var client = new RestClient($"http://localhost:{TestPort}/");
 var requestHandlers = new List<MockHttpHandler>()
 {
     new MockHttpHandler("/person?active=true", (req, rsp, prm) => "Active"),
@@ -258,7 +258,7 @@ using (new MockServer(TestPort, requestHandlers))
 And here is an example of accessing parameters from within the URL.
 
 ``` C#
-var client = new RestClient("http://localhost:3333/");
+var client = new RestClient($"http://localhost:{TestPort}/");
 using (new MockServer(TestPort, "xml/{category}/{id}", (req, rsp, prm) =>
 {
     rsp.Headers.Add("Content-Type", "application/xml; charset=utf-8");

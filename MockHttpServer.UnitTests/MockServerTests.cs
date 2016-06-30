@@ -84,7 +84,6 @@ namespace MockHttpServer.UnitTests
         public void TestJsonConversion()
         {
             var client = CreateRestClient();
-            string expectedResult = "Result";
             var person = new Person() {FirstName = "John", LastName = "Smith", Age = 21};
 
             using (new MockServer(TestPort, "/api", (req, rsp, prm) =>

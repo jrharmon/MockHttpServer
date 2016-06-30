@@ -46,7 +46,11 @@ namespace MockHttpServer
 
             Port = port > 0 ? port : GetRandomUnusedPort();
 
-            HandleRequests(Port);
+            //create and start listener
+            _listener = new HttpListener();
+            _listener.Prefixes.Add($"http://{_wildcardChar}:{Port}/");
+            _listener.Start();
+            HandleRequests();
         }
 
         #region Private Methods
@@ -60,13 +64,8 @@ namespace MockHttpServer
             return port;
         }
 
-        private async Task HandleRequests(int port)
+        private async Task HandleRequests()
         {
-            //create and start listener
-            _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://{_wildcardChar}:{port}/");
-            _listener.Start();
-
             try
             {
                 //listen for all requests
