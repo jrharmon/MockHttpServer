@@ -11,9 +11,12 @@ namespace MockHttpServer
     public class MockServer : IDisposable
     {
         private HttpListener _listener;
-        private readonly List<MockHttpHandler> _requestHandlers;
+        private List<MockHttpHandler> _requestHandlers;
+        private readonly object _requestHandlersLock = new object();
         private readonly Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> _preHandler; //if set, this will be executed for every request before the handler is called
         private readonly char _wildcardChar; //the wildcard to use for the localhost ip address.  * (the default) and + work the same, but if a port is registered by netsh with a +, you can specify it in the constructor
+
+        public IReadOnlyList<MockHttpHandler> RequestHandlers => _requestHandlers;
 
         public int Port { get; }
 
@@ -29,18 +32,18 @@ namespace MockHttpServer
 
         }
 
-        public MockServer(int port, List<MockHttpHandler> requestHandlers, char wildcardChar = '*')
+        public MockServer(int port, IEnumerable<MockHttpHandler> requestHandlers, char wildcardChar = '*')
             : this(port, requestHandlers, null, wildcardChar)
         {
 
         }
 
-        public MockServer(int port, List<MockHttpHandler> requestHandlers, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> preHandler, char wildcardChar = '*')
+        public MockServer(int port, IEnumerable<MockHttpHandler> requestHandlers, Action<HttpListenerRequest, HttpListenerResponse, Dictionary<string, string>> preHandler, char wildcardChar = '*')
         {
             if ((wildcardChar != '*') && (wildcardChar != '+'))
                 throw new ArgumentOutOfRangeException(nameof(wildcardChar), "The value must be either '*' or '+'.");
 
-            _requestHandlers = requestHandlers;
+            _requestHandlers = requestHandlers.ToList(); //make a copy of the items, in case they get cleared later
             _preHandler = preHandler;
             _wildcardChar = wildcardChar;
 
@@ -78,7 +81,11 @@ namespace MockHttpServer
                     {
                         //determine the hanlder
                         Dictionary<string, string> parameters = null;
-                        var handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
+                        MockHttpHandler handler;
+                        lock (_requestHandlersLock)
+                        {
+                            handler = _requestHandlers.FirstOrDefault(h => h.MatchesUrl(context.Request.RawUrl, context.Request.HttpMethod, out parameters));
+                        }
 
                         //run the shared pre-handler
                         _preHandler?.Invoke(context.Request, context.Response, parameters ?? new Dictionary<string, string>());
@@ -135,6 +142,34 @@ namespace MockHttpServer
         }
 
         #endregion Private Methods
+
+        #region Public Methods
+
+        public void AddRequestHandler(MockHttpHandler requestHandler)
+        {
+            lock (_requestHandlersLock)
+            {
+                _requestHandlers.Add(requestHandler);
+            }
+        }
+
+        public void ClearRequestHandlers()
+        {
+            lock (_requestHandlersLock)
+            {
+                _requestHandlers.Clear();
+            }
+        }
+
+        public void SetRequestHandlers(IEnumerable<MockHttpHandler> requestHandlers)
+        {
+            lock (_requestHandlersLock)
+            {
+                _requestHandlers = requestHandlers.ToList();
+            }
+        }
+
+        #endregion Public Methods
 
         #region IDisposable
 

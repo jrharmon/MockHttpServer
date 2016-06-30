@@ -319,6 +319,46 @@ namespace MockHttpServer.UnitTests
         }
 
         [TestMethod]
+        public void TestUpdateUrlHandlers()
+        {
+            var client = CreateRestClient();
+            var jsonHandler = new MockHttpHandler("/json/", (req, rsp, prm) => @"{""Value"": 64}");
+            var xmlHandler = new MockHttpHandler("/xml/", (req, rsp, prm) => "<Value>64</Value>");
+            var requestHandlers = new List<MockHttpHandler>()
+            {
+                jsonHandler,
+                xmlHandler
+            };
+
+            using (var server = new MockServer(TestPort, requestHandlers))
+            {
+                //test original handlers
+                var result = client.Execute(new RestRequest("/json", Method.POST));
+                Assert.AreEqual(@"{""Value"": 64}", result.Content);
+
+                result = client.Execute(new RestRequest("/xml", Method.POST));
+                Assert.AreEqual("<Value>64</Value>", result.Content);
+
+                result = client.Execute(new RestRequest("somepath", Method.POST));
+                Assert.AreEqual("No handler provided for URL: /somepath", result.Content);
+
+                //test handler modifications
+                server.ClearRequestHandlers();
+                result = client.Execute(new RestRequest("/json", Method.POST));
+                Assert.AreEqual("No handler provided for URL: /json", result.Content);
+
+                server.AddRequestHandler(jsonHandler);
+                result = client.Execute(new RestRequest("/json", Method.POST));
+                Assert.AreEqual(@"{""Value"": 64}", result.Content);
+
+                server.SetRequestHandlers(requestHandlers);
+                result = client.Execute(new RestRequest("/xml", Method.POST));
+                Assert.AreEqual("<Value>64</Value>", result.Content);
+
+            }
+        }
+
+        [TestMethod]
         public void TestUrlParameters()
         {
             var client = CreateRestClient();
