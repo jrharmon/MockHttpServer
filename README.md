@@ -18,7 +18,7 @@ It can easily be installed through NuGet, using the [MockHttpServer](http://nuge
   1. [Custom Extension Methods](#custom-extension-methods)
   1. [Parameters](#parameters)
 
-##Usage
+## Usage
 
 In its simplest form, when creating an instance of MockServer, you just need to specify the port to
 listen on, a url to listen for (just the part after the port), and a lambda that returns a string
@@ -44,7 +44,7 @@ can set the port to 0 when creating MockServer, and it will pick a random un-use
 property to see what was used, and make requests against that port.  (Internally, TcpListener is used to find the port,
 which may trigger a firewall warning, and will usually need admin rights to run.)
 
-###Multiple Handlers
+### Multiple Handlers
 
 The second type of constructor takes in a list of MockHttpListener objects, allowing more control over the configuration,
 as well as the ability to specify any number of requests to handle.
@@ -93,12 +93,14 @@ mockServer.AddRequestHandler(myHandler);
 mockServer.SetRequestHandlers(myHandlers);
 ```
 
-###Admin Requirements
+### Admin Requirements
 
-Due to security restrictions within Windows, the application must be run as an admin for MockServer to function.  For
+By default, MockHttpServer listens for the hostname 'localhost', so any url must use that explicitly, and you can't respond to requrests from a different computer.
+
+A wild card can be used as the hostname, but due to security restrictions within Windows, the application must be run as an admin to do so.  For
 instances where this is not possible, there are two options.
 
-You can add an exemption for a specific port that all users can listen on using the 'netsh' command (from an Admin
+You can add an exemption for a specific port that all users can listen on, using the 'netsh' command (from an Admin
 command prompt).
 
 ``` Dos
@@ -116,7 +118,7 @@ netsh http show urlacl
 ```
 
 Just look for a reserved URL similar to http://*:3333/ or http://+:3333/.  Note also, that when using a netsh exemption,
-the MockServer must match that url EXACTLY.  By default, it uses an '*', so if you can only find one that uses a '+'
+the MockServer must match that url EXACTLY.  By default, it uses an '\*', so if you can only find one that uses a '+'
 (which works identically), then you can pass that character in as the last optional parameter to the MockServer
 constructor.
 
@@ -124,7 +126,7 @@ constructor.
 using (new MockServer(TestPort, "", (req, rsp, prm) => "Result Body", '+'))
 ```
 
-###Detailed Input/Output
+### Detailed Input/Output
 
 Notice that the lambda for the handlers takes in both the request (HttpListenerRequest) and response (HttpListenerResponse)
 objects, which allows you full access to additional input information, and the ability to set adiditional output information.
@@ -169,7 +171,7 @@ using (new MockServer(TestPort, "/api", (req, rsp, prm) =>
 }
 ```
 
-###Extension Methods
+### Extension Methods
 
 As seen in the previous examples, there are multiple built-in extension methods for the request and response objects that
 make it easier to work with them.  Many of the response methods simply set properties that could already be set, but they
@@ -197,7 +199,7 @@ void JsonTextContent(this HttpListenerResponse response, string value) //same as
 HttpListenerResponse StatusCode(this HttpListenerResponse response, int statusCode)
 ```
 
-####Custom Extension Methods
+#### Custom Extension Methods
 
 While the built-in extension methods cover the basics, it is very easy to write your own for any actions your perform
 often.  Perhaps you often return a 404 with a custom message (as was done above), you could create an extension of the
@@ -237,7 +239,7 @@ public static class MockServerExtensions
 }
 ```
 
-###Parameters
+### Parameters
 
 There is built-in support for easily accessing parameters from the query string, or the URL itself.  The third
 parameter of the handler lambda is a dictionary of all parameters from the URL and query string combined.  Parameters

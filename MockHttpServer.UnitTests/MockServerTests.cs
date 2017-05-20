@@ -306,12 +306,12 @@ namespace MockHttpServer.UnitTests
         }
 
         [TestMethod]
-        public void TestSpecifiedWildcard()
+        public void TestSpecifiedHostName()
         {
             var client = CreateRestClient();
             string expectedResult = "Result";
 
-            using (new MockServer(TestPort, "", (req, rsp, prm) => expectedResult, '+'))
+            using (new MockServer(TestPort, "", (req, rsp, prm) => expectedResult, "+"))
             {
                 var result = client.Execute(new RestRequest("", Method.POST));
                 Assert.AreEqual(expectedResult, result.Content);
