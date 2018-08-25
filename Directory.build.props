@@ -16,9 +16,9 @@
   <!-- CI Helpers -->
   <PropertyGroup>
     <PackageOutputPath>$(MSBuildThisFileDirectory)/Artifacts</PackageOutputPath>
-    <PackageOutputPath Condition=" $(BUILD_ARTIFACTSTAGINGDIRECTORY) != '' ">$(BUILD_ARTIFACTSTAGINGDIRECTORY)</PackageOutputPath>
+    <PackageOutputPath Condition=" '$(BUILD_ARTIFACTSTAGINGDIRECTORY)' != '' ">$(BUILD_ARTIFACTSTAGINGDIRECTORY)</PackageOutputPath>
     <IsPackable Condition=" $(ProjectName.Contains('Test')) ">false</IsPackable>
-    <GeneratePackageOnBuild>$(IsPackable)</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IS_PREVIEW Condition=" $(IS_PREVIEW) == '' ">false</IS_PREVIEW>
     <IS_RELEASE Condition=" $(IS_RELEASE) == '' ">false</IS_RELEASE>
     <VersionPrefix Condition=" $(BUILD_BUILDNUMBER) != '' ">$(VersionPrefix).$(BUILD_BUILDNUMBER)</VersionPrefix>
