@@ -17,6 +17,7 @@
   <PropertyGroup>
     <PackageOutputPath>$(MSBuildThisFileDirectory)/Artifacts</PackageOutputPath>
     <PackageOutputPath Condition=" '$(BUILD_ARTIFACTSTAGINGDIRECTORY)' != '' ">$(BUILD_ARTIFACTSTAGINGDIRECTORY)</PackageOutputPath>
+    <IsPackable>true</IsPackable>
     <IsPackable Condition=" $(ProjectName.Contains('Test')) ">false</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IS_PREVIEW Condition=" $(IS_PREVIEW) == '' ">false</IS_PREVIEW>
@@ -26,5 +27,11 @@
     <VersionSuffix>ci</VersionSuffix>
     <VersionSuffix Condition=" $(IS_PREVIEW) ">pre</VersionSuffix>
     <VersionSuffix Condition=" $(IS_RELEASE) "></VersionSuffix>
+  </PropertyGroup>
+
+  <!-- Support Strongly Signed Assemblies  -->
+  <PropertyGroup>
+    <SignAssembly Condition=" $(IsPackable) ">true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)MockHttpServer.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 </Project>
