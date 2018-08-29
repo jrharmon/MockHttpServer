@@ -50,7 +50,11 @@ namespace MockHttpServer
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://{_hostName}:{Port}/");
             _listener.Start();
+
+// Cannot await Async Call in a Constructor
+#pragma warning disable 4014
             HandleRequests();
+#pragma warning restore 4014
         }
 
         #region Private Methods

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using RestSharp;
 
 namespace MockHttpServer.UnitTests
@@ -382,14 +383,14 @@ namespace MockHttpServer.UnitTests
     {
         public static T JsonToObject<T>(this HttpListenerRequest request)
         {
-            return SimpleJson.DeserializeObject<T>(request.Content());
-            //return JsonConvert.DeserializeObject<T>(request.Content());
+            //return SimpleJson.DeserializeObject<T>(request.Content());
+            return JsonConvert.DeserializeObject<T>(request.Content());
         }
 
         public static void JsonContent(this HttpListenerResponse response, object contentObject)
         {
-            var jsonText = SimpleJson.SerializeObject(contentObject); //doesn't work for dynamic
-            //var jsonText JsonConvert.SerializeObject(contentObject); //handles dynamic
+            //var jsonText = SimpleJson.SerializeObject(contentObject); //doesn't work for dynamic
+            var jsonText = JsonConvert.SerializeObject(contentObject); //handles dynamic
             response.ContentType("application/json").Content(jsonText);
         }
     }
