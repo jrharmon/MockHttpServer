@@ -5,9 +5,9 @@ nuget:
   project_feed: true
 before_build:
   - nuget restore
-build:
-  publish_nuget: true
-  verbosity: minimal
+build_script:
+- cmd: >-
+    msbuild MockHttpServer.sln /p:Configuration=Release
 artifacts:
 - path: Artifacts
   name: NuGet
