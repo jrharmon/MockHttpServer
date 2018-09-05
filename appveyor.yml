@@ -5,9 +5,11 @@ nuget:
   project_feed: true
 before_build:
   - nuget restore
-build_script:
-- cmd: >-
-    msbuild MockHttpServer.sln /p:Configuration=Release
+build:
+  project: MyTestAzureCS.sln      # path to Visual Studio solution or project
+  publish_nuget: true             # package projects with .nuspec files and push to artifacts
+  publish_nuget_symbols: true     # generate and publish NuGet symbol packages
+  include_nuget_references: true  # add -IncludeReferencedProjects option while packaging NuGet artifacts
 artifacts:
 - path: Artifacts
   name: NuGet
