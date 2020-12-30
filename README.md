@@ -59,7 +59,7 @@ var client = new RestClient($"http://localhost:{TestPort}/");
 var requestHandlers = new List<MockHttpHandler>()
 {
     new MockHttpHandler("/data", "GET", (req, rsp, prm) => "Get"),
-    new MockHttpHandler("/data", "POST", (req, rsp, prm) => "Post").
+    new MockHttpHandler("/data", "POST", (req, rsp, prm) => "Post"),
     new MockHttpHandler("/data-multi", "GET,POST", (req, rsp, prm) => "Get/Post")
 };
 
